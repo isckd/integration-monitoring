@@ -1,0 +1,3732 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.3.1"
+    },
+    {
+      "type": "panel",
+      "id": "piechart",
+      "name": "Pie chart",
+      "version": ""
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "text",
+      "name": "Text",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "enable": false,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "limit": 100,
+        "name": "Annotations & Alerts",
+        "showIn": 0,
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Use oracledb exporter for oracle database monitoring. Compared with other dashboards, tablespace monitoring is added, which can be expanded to set tablespace alarms",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "tags": [],
+      "type": "dashboards"
+    }
+  ],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 101,
+      "panels": [],
+      "title": "Description",
+      "type": "row"
+    },
+    {
+      "gridPos": {
+        "h": 14,
+        "w": 7,
+        "x": 0,
+        "y": 1
+      },
+      "id": 93,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "# Custom Panel Summary\nCustom Panel - Realtime SQL\n- 실시간 SQL - 5초 Polling\n  - 현재 실행중인 SQL 문의 정보를 나타낸다. 5초마다 Polling 되어 Metric 을 수집한 시점의 정보를 실시간으로 노출한다.\n\nCustom Panel - Host CPU, Memory\n- Oracle DB 가 띄워진 HOST OS 의 CPU, Memory 사용량을 노출한다.\n\nCustom Panel - SQL쿼리별 CPU 사용시간 총량 기준 TOP 20 [5초마다 갱신]   (최하단에 있음)\n- SQL쿼리별 CPU 사용시간 총량 기준 TOP 20\n  - SQL 별 누적 총량으로 cpu_time TOP 20 에 대한 Metric 들을 노출한다.\n  - 당연히 실행 횟수가 많으면 CPU 사용시간도 높다.\n  - 실행 횟수가 비정상적으로 높거나, 실행 횟수가 낮음에도 CPU 사용시간이 높은 것을 중점적으로 보자.\n- SQL쿼리별 (총 수행시간 / 총 수행 수) TOP 20\n  - SQL 별 누적 총량으로 elapsed_time / executions 으로 TOP 20 에 대한 Metric 들을 노출한다.\n  - cpu_time 이 아닌 elasped_time 을 의미하므로 lock 대기, I/O 시간 등을 고려해야 한다.\n- SQL쿼리별 (Logical IO 수행 수 / SQL 실행 수) TOP 20\n  - SQL 별 누적 총량으로 buffer_gets / executions 으로 TOP 20 에 대한 Metric 들을 노출한다.\n  - disk_reads 에 비해 buffer_gets 값이 상대적으로 높다면 메모리에 캐싱이 되고 있는 것을 의미한다.\n  - 다만 buffer_gets / executions 값이 반드시 효율적이라기 보다는,  <br>\n  bugger_gets 값이 비정상적으로 높다면 Full Table Scan 자체가 캐싱되었을 가능성도 고려하자.\n\n<br>\n\n",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.3.1",
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 14,
+        "w": 9,
+        "x": 7,
+        "y": 1
+      },
+      "id": 106,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "# Custom Panel Field\n\n- sid : 세션을 고유하게 식별하는 ID\n- serial# : 세션의 고유 시리얼 넘버. 세션 종료 후 재사용될 경우를 대비해 추가로 사용됨.\n- machine : 세션이 연결된 클라이언트의 host name\n- program : 세션을 시작한 application name (SQL*Plus, JDBC Driver...)\n- osuser : 세션을 실행 중인 클라이언트의 OS user name\n- elapsed_seconds : SQL 문이 실행된 지 경과한 시간 (unit : second)\n- sql_id : 실행 중인 SQL 문을 고유하게 식별하는 ID. 일반적으로 WHERE 절에 들어가는 바인딩 변수는 제외한 구문이다.\n- plan_hash_value : 실행 계획을 나타내는 Hash 값. 동일한 SQL 문이라도 바인딩 변수, 데이터 분포에 따라 인덱스 스캔이 다르게 된다. <br>\n세부적으로는 Buffer Cache, Shared Pool 등 메모리 사용량 및 SQL Hint, 파티셔닝, Curosr(커서) Sharing 등의 여부에 따라 변경될 수 있다.\n- executions: SQL 실행 수\n- buffer_gets: Logical I/O 수행 수 (많으면 인덱스 최적화)\n- disk_reads: Physical I/O 수행 수 (많으면 캐싱 / 데이터 접근 패턴 점검)\n- cpu_time: SQL 문이 실행 중 CPU 를 사용한 총 시간 (micro second)\n- elapsed_time: SQL 문이 실행을 완료하는 데 소요된 총 시간 (micro second). <br> \ncpu_time 뿐 아니라 I/O, Lock 대기, 컨텍스트 스위칭 등의 시간이 포함된다.\n- cpu_ratio: SQL 문이 총 CPU 자원에서 차지한 비율\n- elapsed_time_ratio: SQL 문이 전체 실행 시간(Elapsed Time)에서 차지한 비율\n",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.3.1",
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 16,
+        "y": 1
+      },
+      "id": 107,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "# Tip\n\n<br>\n\n### 무한 Lock 으로 row 접근이 안되는 경우 <br> \nCustom Panel - Realtime SQL > 실시간 SQL - 5초 Polling 패널에서 문제가 되는 SQL 확인 후 <br>\n해당 SQL 의 sid, serial# 을 기준으로 <br>\n- ALTER SYSTEM KILL SESSION 'sid, serial#' IMMEDIATE; <br>\n\n을 실행해 해당 세션을 Kill 해 Lock 을 풀자.\n\n<br>\n\n### Custom Panel 의 Metric 조회 SQL 정보\n- Panel 명 옆의 i 툴팁 아이콘에 마우스를 올려놓으면 Metric 정보를 수집한 SQL 문 노출.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.3.1",
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 11
+      },
+      "id": 109,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "metric collect reference : https://github.com/iamseth/oracledb_exporter <br>\ndashboard reference : https://grafana.com/grafana/dashboards/13555-oracledb-monitoring-performance-and-table-space-stats/",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.3.1",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "id": 104,
+      "panels": [],
+      "title": "Custom Panel - Realtime SQL",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "SELECT\n    s.sid,\n    s.serial#,\n    s.status,\n    s.schemaname AS schema,\n    s.machine,\n    s.program,\n    s.osuser,\n    TO_CHAR(s.sql_exec_start, 'YYYY-MM-DD HH24:MI:SS') AS start_time,\n    ROUND((SYSDATE - s.sql_exec_start)*24*60*60, 0) AS elapsed_seconds,\n    s.sql_id,\n    q.hash_value AS plan_hash_value,\n    q.cpu_time,\n    q.buffer_gets,\n    q.disk_reads,\n    q.sql_text\nFROM v$session s\n         JOIN v$sqlarea q ON s.sql_id = q.sql_id\nWHERE s.status = 'ACTIVE'\n    AND s.sql_exec_start IS NOT NULL\n    AND s.schemaname != 'SYS'\nORDER BY q.cpu_time DESC;",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "color-text"
+            },
+            "filterable": true,
+            "inspect": true
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 182
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "schema"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 89
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "full_text"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 616
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "start_time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "elapsed_time(s)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 134
+              },
+              {
+                "id": "unit",
+                "value": "locale"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "buffer_gets"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 126
+              },
+              {
+                "id": "unit",
+                "value": "locale"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "disk_reads"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 126
+              },
+              {
+                "id": "unit",
+                "value": "locale"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "serial#"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 107
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sid"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 96
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sql_id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 124
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cpu_time(μs)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 141
+              },
+              {
+                "id": "unit",
+                "value": "locale"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 105,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "oracledb_custom_sql_realtime_info_plan_hash_value{instance=\"$host\"}",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "realtime",
+          "range": false,
+          "refId": "realtime",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "title": "실시간 SQL - 5초 Polling",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Value": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "status": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Time": 0,
+              "Value": 18,
+              "__name__": 11,
+              "buffer_gets": 9,
+              "cpu_time": 7,
+              "disk_reads": 10,
+              "elapsed_seconds": 8,
+              "instance": 12,
+              "job": 13,
+              "machine": 4,
+              "osuser": 6,
+              "program": 5,
+              "schema": 1,
+              "serial": 14,
+              "sid": 15,
+              "sql_id": 16,
+              "sql_text": 2,
+              "start_time": 3,
+              "status": 17
+            },
+            "renameByName": {
+              "cpu_time": "cpu_time(μs)",
+              "elapsed_seconds": "elapsed_time(s)",
+              "serial": "serial#",
+              "sql_text": "full_text"
+            }
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [],
+            "fields": {}
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
+      "id": 89,
+      "panels": [],
+      "title": "Custom Panel - Host CPU, Memory",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 27
+      },
+      "id": 94,
+      "interval": "15s",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "oracledb_custom_os_resource_info_cpu_usage_percent{instance=\"$host\"}",
+          "format": "time_series",
+          "instant": false,
+          "interval": "5s",
+          "legendFormat": "cpu_usage_percent",
+          "range": true,
+          "refId": "os_cpu_usage",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "title": "OS_CPU_USAGE_%",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 27
+      },
+      "id": 95,
+      "interval": "15s",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "oracledb_custom_os_resource_info_memory_usage_percent{instance=\"$host\"}",
+          "instant": false,
+          "interval": "5s",
+          "legendFormat": "memory_usage_percent",
+          "range": true,
+          "refId": "os_cpu_usage",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "title": "OS_MEMORY_USAGE_%",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 27
+      },
+      "id": 96,
+      "options": {
+        "displayLabels": [
+          "name",
+          "value",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true,
+          "values": []
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "oracledb_custom_os_resource_info_available_memory_gb{instance=\"$host\"}",
+          "interval": "5s",
+          "legendFormat": "useable_memory_gb",
+          "range": true,
+          "refId": "useable_memory",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "oracledb_custom_os_resource_info_used_memory_gb{instance=\"$host\"}",
+          "hide": false,
+          "instant": false,
+          "interval": "5s",
+          "legendFormat": "used_memory_gb",
+          "range": true,
+          "refId": "used_memory_gb"
+        }
+      ],
+      "title": "CURRENT_MEMORY",
+      "type": "piechart"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      },
+      "id": 67,
+      "panels": [],
+      "title": "Database",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "text": "DEAD"
+                }
+              },
+              "type": "value"
+            },
+            {
+              "options": {
+                "1": {
+                  "text": "ALIVE"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "rgba(245, 54, 54, 0.9)",
+                "value": null
+              },
+              {
+                "color": "rgba(237, 129, 40, 0.89)",
+                "value": 0
+              },
+              {
+                "color": "rgba(50, 172, 45, 0.97)",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 5,
+        "x": 0,
+        "y": 34
+      },
+      "id": 12,
+      "interval": "$interval",
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "calculatedInterval": "10m",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "datasourceErrors": {},
+          "errors": {},
+          "expr": "oracledb_up{instance=\"$host\"}",
+          "format": "time_series",
+          "interval": "5m",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "metric": "",
+          "refId": "A",
+          "step": 300
+        }
+      ],
+      "title": "Database status",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgb(31, 120, 193)",
+            "mode": "fixed"
+          },
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 5,
+        "y": 34
+      },
+      "id": 71,
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "oracledb_process_count{instance=\"$host\"}",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "{{descr}} - Process count",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Process count",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgb(31, 120, 193)",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "rgba(50, 172, 45, 0.97)",
+                "value": null
+              },
+              {
+                "color": "rgba(237, 129, 40, 0.89)",
+                "value": 90
+              },
+              {
+                "color": "rgba(245, 54, 54, 0.9)",
+                "value": 95
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 11,
+        "y": 34
+      },
+      "id": 51,
+      "interval": "$interval",
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "calculatedInterval": "10m",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "datasourceErrors": {},
+          "errors": {},
+          "expr": "oracledb_activity_user_commits{instance=\"$host\"}",
+          "format": "time_series",
+          "interval": "5m",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "metric": "",
+          "refId": "A",
+          "step": 300
+        }
+      ],
+      "title": "User commits",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 9,
+        "x": 15,
+        "y": 34
+      },
+      "id": 73,
+      "options": {
+        "alertThreshold": true,
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "oracledb_resource_current_utilization{instance=\"$host\"}",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Resource utilization - {{resource_name}} ",
+          "refId": "A"
+        }
+      ],
+      "title": "Resource utilization",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "log": 2,
+              "type": "log"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "fieldMinMax": true,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 5,
+        "x": 0,
+        "y": 37
+      },
+      "id": 13,
+      "interval": "$interval",
+      "maxDataPoints": 100,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "calculatedInterval": "10m",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "datasourceErrors": {},
+          "editorMode": "code",
+          "errors": {},
+          "expr": "oracledb_sessions_value{instance=\"$host\",type=\"USER\"}",
+          "format": "time_series",
+          "instant": false,
+          "interval": "$interval",
+          "intervalFactor": 1,
+          "legendFormat": "{{status}}",
+          "metric": "",
+          "refId": "A",
+          "step": 60
+        }
+      ],
+      "title": "Active sessions (USER)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 5,
+        "y": 37
+      },
+      "id": 52,
+      "interval": "$interval",
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "calculatedInterval": "10m",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "datasourceErrors": {},
+          "errors": {},
+          "expr": "oracledb_activity_execute_count{instance=\"$host\"}",
+          "format": "time_series",
+          "interval": "5m",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "metric": "",
+          "refId": "A",
+          "step": 300
+        }
+      ],
+      "title": "Execute count",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgb(31, 120, 193)",
+            "mode": "fixed"
+          },
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 11,
+        "y": 37
+      },
+      "id": 69,
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "oracledb_activity_user_rollbacks{instance=\"$host\"}",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "{{descr}} - User rollback",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "User rollback",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 7,
+        "x": 0,
+        "y": 43
+      },
+      "id": 53,
+      "options": {
+        "alertThreshold": true,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "calculatedInterval": "2m",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "datasourceErrors": {},
+          "errors": {},
+          "expr": "oracledb_wait_time_concurrency{instance=\"$host\"}",
+          "format": "time_series",
+          "interval": "$interval",
+          "intervalFactor": 1,
+          "legendFormat": "{{descr}} - Concurrent wait time",
+          "metric": "",
+          "refId": "A",
+          "step": 60
+        }
+      ],
+      "title": "Concurrent wait time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 7,
+        "y": 43
+      },
+      "id": 54,
+      "options": {
+        "alertThreshold": true,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "calculatedInterval": "2m",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "datasourceErrors": {},
+          "errors": {},
+          "expr": "oracledb_wait_time_commit{instance=\"$host\"}",
+          "format": "time_series",
+          "interval": "$interval",
+          "intervalFactor": 1,
+          "legendFormat": "{{descr}} - Commit wait time",
+          "metric": "",
+          "refId": "A",
+          "step": 60
+        }
+      ],
+      "title": "Commit wait time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 9,
+        "x": 15,
+        "y": 43
+      },
+      "id": 75,
+      "options": {
+        "alertThreshold": true,
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "oracledb_wait_time_configuration{instance=\"$host\"}",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "{{descr}} - Configure wait time",
+          "refId": "A"
+        }
+      ],
+      "title": "Configure wait time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 7,
+        "x": 0,
+        "y": 49
+      },
+      "id": 59,
+      "options": {
+        "alertThreshold": true,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "calculatedInterval": "2m",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "datasourceErrors": {},
+          "errors": {},
+          "expr": "oracledb_wait_time_application{instance=\"$host\"}\t",
+          "format": "time_series",
+          "interval": "$interval",
+          "intervalFactor": 1,
+          "legendFormat": "{{descr}} - Application wait time",
+          "metric": "",
+          "refId": "A",
+          "step": 60
+        }
+      ],
+      "title": "Application wait time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 7,
+        "y": 49
+      },
+      "id": 60,
+      "options": {
+        "alertThreshold": true,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "calculatedInterval": "2m",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "datasourceErrors": {},
+          "errors": {},
+          "expr": "oracledb_wait_time_network{instance=\"$host\"}\t",
+          "format": "time_series",
+          "interval": "$interval",
+          "intervalFactor": 1,
+          "legendFormat": "{{descr}} - Network wait time",
+          "metric": "",
+          "refId": "A",
+          "step": 60
+        }
+      ],
+      "title": "Network wait time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 9,
+        "x": 15,
+        "y": 49
+      },
+      "id": 77,
+      "options": {
+        "alertThreshold": true,
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "oracledb_wait_time_scheduler{instance=\"$host\"}",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "{{descr}} - Scheduler wait time",
+          "refId": "A"
+        }
+      ],
+      "title": "Scheduler wait time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 7,
+        "x": 0,
+        "y": 54
+      },
+      "id": 55,
+      "options": {
+        "alertThreshold": true,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "calculatedInterval": "2m",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "datasourceErrors": {},
+          "errors": {},
+          "expr": "oracledb_wait_time_system_io{instance=\"$host\"}",
+          "format": "time_series",
+          "interval": "$interval",
+          "intervalFactor": 1,
+          "legendFormat": "{{descr}} - System I/O wait",
+          "metric": "",
+          "refId": "A",
+          "step": 60
+        }
+      ],
+      "title": "System I/O wait",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 7,
+        "y": 54
+      },
+      "id": 56,
+      "options": {
+        "alertThreshold": true,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "calculatedInterval": "2m",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "datasourceErrors": {},
+          "errors": {},
+          "expr": "oracledb_wait_time_user_io{instance=\"$host\"}\t",
+          "format": "time_series",
+          "interval": "$interval",
+          "intervalFactor": 1,
+          "legendFormat": "{{descr}} - User I/O wait",
+          "metric": "",
+          "refId": "A",
+          "step": 60
+        }
+      ],
+      "title": "User I/O wait",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 60
+      },
+      "id": 62,
+      "panels": [],
+      "title": "Performance collector status",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgb(31, 120, 193)",
+            "mode": "fixed"
+          },
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 61
+      },
+      "id": 58,
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "oracledb_exporter_scrapes_total{instance=\"$host\"}",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "refId": "A",
+          "step": 10
+        }
+      ],
+      "title": "Total collection",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 3,
+        "y": 61
+      },
+      "id": 57,
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "oracledb_exporter_last_scrape_duration_seconds{instance=\"$host\"}\t",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "refId": "A",
+          "step": 10
+        }
+      ],
+      "title": "Final collection time",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 65
+      },
+      "id": 97,
+      "panels": [],
+      "title": "Custom Panel - SQL쿼리별 CPU 사용시간 총량 기준 TOP 20 [5초마다 갱신]",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "SELECT main.*, (SELECT rtrim(xmlagg(xmlelement(e, sql_text ,' ').extract('//text()') order by piece).GetClobVal(),' ') FROM v$sqltext b WHERE b.sql_id = main.sql_id GROUP BY sql_id ) as full_txt, (SELECT rtrim(xmlagg(xmlelement(e,name || ' = ' || nvl(value_string,'NULL'),' / ').extract('//text()') order by sql_id).GetClobVal(),' / ') FROM V$SQL_BIND_CAPTURE c WHERE c.was_captured = 'YES' AND c.sql_id = main.sql_id AND (sql_id , last_captured) IN (SELECT sql_id , max(last_captured) as last_captured FROM V$SQL_BIND_CAPTURE d WHERE was_captured = 'YES' AND d.sql_id = main.sql_id GROUP BY sql_id ) GROUP BY sql_id ) as bind_vals FROM ( SELECT sql_id, plan_hash_value, parsing_schema_name, executions, buffer_gets, disk_reads, cpu_time, elapsed_time, round(cpu_time/sum(cpu_time) OVER()*100,1) cpu_ratio, round(elapsed_time/sum(elapsed_time) OVER () *100 ,1) elapsed_time_ratio FROM v$sqlarea a WHERE executions > 1 AND parsing_schema_name not in ('SYSAUX','SYSMAN','XDB','HR','ODM','OUTLN','OE','SH','PM','IX','WK_TEST','PERFSTAT','DBSNMP','OLAPSYS','QS_CS','QS_CB','QS_CBADM','QS_OS','QS_WS','QS','QS_ADM','ODM_MTR','WKPROXY','QS_ES','ANONYMOUS','WKSYS','WMSYS','APEX_030200','APEX_PUBLIC_USER','APPQOSSYS','BI','CTXSYS','DIP','EXFSYS','FLOWS_FILES','MDDATA','MDSYS','MGMT_VIEW','ORACLE_OCM','ORDDATA','ORDPLUGINS','ORDSYS','OWBSYS','OWBSYS_AUDIT','SCOTT','SI_INFORMTN_SCHEMA','SPATIAL_CSW_ADMIN_USR','SPATIAL_WFS_ADMIN_USR','XS$NULL') AND NOT (module LIKE 'Golden%' OR module LIKE 'TOAD%' OR module LIKE 'toad%' OR module LIKE 'Orange%' OR module LIKE 'exp%' OR module LIKE 'SQL*Plus%' OR module LIKE 'SQL Developer%' OR module LIKE 'oracle@%' OR module LIKE 'sqlplus@%') AND NOT (TRIM(SQL_TEXT) LIKE '%:Q%' OR TRIM(SQL_TEXT) LIKE 'declare%' OR TRIM(SQL_TEXT) LIKE 'DECLARE%' OR TRIM(SQL_TEXT) LIKE 'truncate%' OR TRIM(SQL_TEXT) LIKE 'TRUNCATE%' OR TRIM(SQL_TEXT) LIKE '%dba\\_%' escape '\\\\' OR TRIM(SQL_TEXT) LIKE '%DBA\\_%' escape '\\\\' OR TRIM(SQL_TEXT) LIKE 'SQLGateMain%' OR TRIM(SQL_TEXT) LIKE 'ALTER SESSION%' OR TRIM(SQL_TEXT) LIKE '%v$%' OR TRIM(SQL_TEXT) LIKE '%x$%') ORDER BY cpu_time/sum(cpu_time) OVER()*100 desc ) main WHERE rownum <= 20",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "color-text",
+              "wrapText": false
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sql_id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": false
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "__name__"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "instance"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "job"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "full_txt"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 1015
+              },
+              {
+                "id": "custom.inspect",
+                "value": true
+              },
+              {
+                "id": "custom.align",
+                "value": "auto"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 182
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "parsing_schema_name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "displayName",
+                "value": "SCHEMA"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "bind_vals"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 172
+              },
+              {
+                "id": "custom.align",
+                "value": "auto"
+              },
+              {
+                "id": "custom.inspect",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "buffer_gets"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cpu_ratio"
+            },
+            "properties": []
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cpu_time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "displayName",
+                "value": "cpu_time (μs)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "executions"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "elapsed_time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "displayName",
+                "value": "elapsed_time (μs)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "disk_reads"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "elapsed_time_ratio"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #cpu_use_avg_top_20"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #elapsed_avg_top_20"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #logical_reads_avg_top_20"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 23,
+        "w": 24,
+        "x": 0,
+        "y": 66
+      },
+      "id": 90,
+      "maxDataPoints": 500,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": [
+            "Value"
+          ],
+          "reducer": [
+            "lastNotNull"
+          ],
+          "show": false
+        },
+        "frameIndex": 0,
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Time"
+          }
+        ]
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "oracledb_custom_sql_accumulate_cpu_use_avg_top_20_plan_hash_value{instance=\"$host\"}",
+          "format": "table",
+          "instant": false,
+          "interval": "5s",
+          "legendFormat": "cpu_use_avg_top_20",
+          "range": true,
+          "refId": "cpu_use_avg_top_20",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "title": "SQL쿼리별 CPU 사용시간 총량 기준 TOP 20",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "cpu_time": false
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Time": 0,
+              "Value": 15,
+              "__name__": 16,
+              "bind_vals": 2,
+              "buffer_gets": 9,
+              "cpu_ratio": 5,
+              "cpu_time": 6,
+              "disk_reads": 10,
+              "elapsed_time": 7,
+              "elapsed_time_ratio": 8,
+              "executions": 4,
+              "full_txt": 3,
+              "instance": 11,
+              "job": 12,
+              "parsing_schema_name": 1,
+              "plan_hash_value": 13,
+              "sql_id": 14
+            },
+            "renameByName": {
+              "cpu_ratio": "",
+              "cpu_time": "",
+              "disk_reads": ""
+            }
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "number",
+                "targetField": "executions"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "cpu_ratio"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "cpu_time"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "elapsed_time"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "elapsed_time_ratio"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "buffer_gets"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "disk_reads"
+              }
+            ],
+            "fields": {}
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 89
+      },
+      "id": 100,
+      "panels": [],
+      "title": "Custom Panel - SQL쿼리별 (총 수행시간 / 총 수행 수) TOP 20 [5초마다 갱신]",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "SELECT main.*, (SELECT rtrim(xmlagg(xmlelement(e, sql_text ,' ').extract('//text()') order by piece).GetClobVal(),' ') FROM v$sqltext b WHERE b.sql_id = main.sql_id GROUP BY sql_id ) as full_txt, (SELECT rtrim(xmlagg(xmlelement(e,name || ' = ' || nvl(value_string,'NULL'),' / ').extract('//text()') order by sql_id).GetClobVal(),' / ') FROM V$SQL_BIND_CAPTURE c WHERE c.was_captured = 'YES' AND c.sql_id = main.sql_id AND (sql_id , last_captured) IN (SELECT sql_id , max(last_captured) as last_captured FROM V$SQL_BIND_CAPTURE d WHERE was_captured = 'YES' AND d.sql_id = main.sql_id GROUP BY sql_id ) GROUP BY sql_id ) as bind_vals FROM ( SELECT sql_id, plan_hash_value, parsing_schema_name, executions, buffer_gets, disk_reads, cpu_time, elapsed_time, round(cpu_time/sum(cpu_time) OVER()*100,1) cpu_ratio, round(elapsed_time/sum(elapsed_time) OVER () *100 ,1) elapsed_time_ratio FROM v$sqlarea a WHERE executions > 1 AND parsing_schema_name not in ('SYSAUX','SYSMAN','XDB','HR','ODM','OUTLN','OE','SH','PM','IX','WK_TEST','PERFSTAT','DBSNMP','OLAPSYS','QS_CS','QS_CB','QS_CBADM','QS_OS','QS_WS','QS','QS_ADM','ODM_MTR','WKPROXY','QS_ES','ANONYMOUS','WKSYS','WMSYS','APEX_030200','APEX_PUBLIC_USER','APPQOSSYS','BI','CTXSYS','DIP','EXFSYS','FLOWS_FILES','MDDATA','MDSYS','MGMT_VIEW','ORACLE_OCM','ORDDATA','ORDPLUGINS','ORDSYS','OWBSYS','OWBSYS_AUDIT','SCOTT','SI_INFORMTN_SCHEMA','SPATIAL_CSW_ADMIN_USR','SPATIAL_WFS_ADMIN_USR','XS$NULL') AND NOT (module LIKE 'Golden%' OR module LIKE 'TOAD%' OR module LIKE 'toad%' OR module LIKE 'Orange%' OR module LIKE 'exp%' OR module LIKE 'SQL*Plus%' OR module LIKE 'SQL Developer%' OR module LIKE 'oracle@%' OR module LIKE 'sqlplus@%') AND NOT (TRIM(SQL_TEXT) LIKE '%:Q%' OR TRIM(SQL_TEXT) LIKE 'declare%' OR TRIM(SQL_TEXT) LIKE 'DECLARE%' OR TRIM(SQL_TEXT) LIKE 'truncate%' OR TRIM(SQL_TEXT) LIKE 'TRUNCATE%' OR TRIM(SQL_TEXT) LIKE '%dba\\_%' escape '\\\\' OR TRIM(SQL_TEXT) LIKE '%DBA\\_%' escape '\\\\' OR TRIM(SQL_TEXT) LIKE 'SQLGateMain%' OR TRIM(SQL_TEXT) LIKE 'ALTER SESSION%' OR TRIM(SQL_TEXT) LIKE '%v$%' OR TRIM(SQL_TEXT) LIKE '%x$%') ORDER BY cpu_time/sum(cpu_time) OVER()*100 desc ) main WHERE rownum <= 20",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "color-text",
+              "wrapText": false
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sql_id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": false
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "__name__"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "instance"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "job"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "full_txt"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 1015
+              },
+              {
+                "id": "custom.inspect",
+                "value": true
+              },
+              {
+                "id": "custom.align",
+                "value": "auto"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 182
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "parsing_schema_name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "displayName",
+                "value": "SCHEMA"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "bind_vals"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 172
+              },
+              {
+                "id": "custom.align",
+                "value": "auto"
+              },
+              {
+                "id": "custom.inspect",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "buffer_gets"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cpu_ratio"
+            },
+            "properties": []
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cpu_time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "displayName",
+                "value": "cpu_time (μs)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "executions"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "elapsed_time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "displayName",
+                "value": "elapsed_time (μs)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "disk_reads"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "elapsed_time (μs)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 167
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "elapsed_time_ratio"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 23,
+        "w": 24,
+        "x": 0,
+        "y": 90
+      },
+      "id": 98,
+      "maxDataPoints": 500,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": [
+            "Value"
+          ],
+          "reducer": [
+            "lastNotNull"
+          ],
+          "show": false
+        },
+        "frameIndex": 0,
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Time"
+          }
+        ]
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "oracledb_custom_sql_accumulate_elapsed_avg_top_20_plan_hash_value{instance=\"$host\"}",
+          "format": "table",
+          "hide": false,
+          "instant": false,
+          "interval": "5s",
+          "legendFormat": "elapsed_avg_top_20",
+          "range": true,
+          "refId": "elapsed_avg_top_20"
+        }
+      ],
+      "title": "SQL쿼리별 (총 수행시간 / 총 수행 수) TOP 20",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "cpu_time": false
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Time": 0,
+              "Value": 15,
+              "__name__": 16,
+              "bind_vals": 2,
+              "buffer_gets": 9,
+              "cpu_ratio": 5,
+              "cpu_time": 6,
+              "disk_reads": 10,
+              "elapsed_time": 7,
+              "elapsed_time_ratio": 8,
+              "executions": 4,
+              "full_txt": 3,
+              "instance": 11,
+              "job": 12,
+              "parsing_schema_name": 1,
+              "plan_hash_value": 13,
+              "sql_id": 14
+            },
+            "renameByName": {
+              "cpu_ratio": "",
+              "cpu_time": "",
+              "disk_reads": ""
+            }
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "number",
+                "targetField": "executions"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "cpu_ratio"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "cpu_time"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "elapsed_time"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "elapsed_time_ratio"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "buffer_gets"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "disk_reads"
+              }
+            ],
+            "fields": {}
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 113
+      },
+      "id": 102,
+      "panels": [],
+      "title": "Custom Panel - SQL쿼리별 (Logical IO 수행 수 / SQL 실행 수) TOP 20 [5초마다 갱신]",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "SELECT main.*, (SELECT rtrim(xmlagg(xmlelement(e, sql_text ,' ').extract('//text()') order by piece).GetClobVal(),' ') FROM v$sqltext b WHERE b.sql_id = main.sql_id GROUP BY sql_id ) as full_txt, (SELECT rtrim(xmlagg(xmlelement(e,name || ' = ' || nvl(value_string,'NULL'),' / ').extract('//text()') order by sql_id).GetClobVal(),' / ') FROM V$SQL_BIND_CAPTURE c WHERE c.was_captured = 'YES' AND c.sql_id = main.sql_id AND (sql_id , last_captured) IN (SELECT sql_id , max(last_captured) as last_captured FROM V$SQL_BIND_CAPTURE d WHERE was_captured = 'YES' AND d.sql_id = main.sql_id GROUP BY sql_id ) GROUP BY sql_id ) as bind_vals FROM ( SELECT sql_id, plan_hash_value, parsing_schema_name, executions, buffer_gets, disk_reads, cpu_time, elapsed_time, round(cpu_time/sum(cpu_time) OVER()*100,1) cpu_ratio, round(elapsed_time/sum(elapsed_time) OVER () *100 ,1) elapsed_time_ratio FROM v$sqlarea a WHERE executions > 1 AND parsing_schema_name not in ('SYSAUX','SYSMAN','XDB','HR','ODM','OUTLN','OE','SH','PM','IX','WK_TEST','PERFSTAT','DBSNMP','OLAPSYS','QS_CS','QS_CB','QS_CBADM','QS_OS','QS_WS','QS','QS_ADM','ODM_MTR','WKPROXY','QS_ES','ANONYMOUS','WKSYS','WMSYS','APEX_030200','APEX_PUBLIC_USER','APPQOSSYS','BI','CTXSYS','DIP','EXFSYS','FLOWS_FILES','MDDATA','MDSYS','MGMT_VIEW','ORACLE_OCM','ORDDATA','ORDPLUGINS','ORDSYS','OWBSYS','OWBSYS_AUDIT','SCOTT','SI_INFORMTN_SCHEMA','SPATIAL_CSW_ADMIN_USR','SPATIAL_WFS_ADMIN_USR','XS$NULL') AND NOT (module LIKE 'Golden%' OR module LIKE 'TOAD%' OR module LIKE 'toad%' OR module LIKE 'Orange%' OR module LIKE 'exp%' OR module LIKE 'SQL*Plus%' OR module LIKE 'SQL Developer%' OR module LIKE 'oracle@%' OR module LIKE 'sqlplus@%') AND NOT (TRIM(SQL_TEXT) LIKE '%:Q%' OR TRIM(SQL_TEXT) LIKE 'declare%' OR TRIM(SQL_TEXT) LIKE 'DECLARE%' OR TRIM(SQL_TEXT) LIKE 'truncate%' OR TRIM(SQL_TEXT) LIKE 'TRUNCATE%' OR TRIM(SQL_TEXT) LIKE '%dba\\_%' escape '\\\\' OR TRIM(SQL_TEXT) LIKE '%DBA\\_%' escape '\\\\' OR TRIM(SQL_TEXT) LIKE 'SQLGateMain%' OR TRIM(SQL_TEXT) LIKE 'ALTER SESSION%' OR TRIM(SQL_TEXT) LIKE '%v$%' OR TRIM(SQL_TEXT) LIKE '%x$%') ORDER BY cpu_time/sum(cpu_time) OVER()*100 desc ) main WHERE rownum <= 20",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "color-text",
+              "wrapText": false
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sql_id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": false
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "__name__"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "instance"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "job"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "full_txt"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 1015
+              },
+              {
+                "id": "custom.inspect",
+                "value": true
+              },
+              {
+                "id": "custom.align",
+                "value": "auto"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 182
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "parsing_schema_name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "displayName",
+                "value": "SCHEMA"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "bind_vals"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 172
+              },
+              {
+                "id": "custom.align",
+                "value": "auto"
+              },
+              {
+                "id": "custom.inspect",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "buffer_gets"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cpu_ratio"
+            },
+            "properties": []
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cpu_time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "displayName",
+                "value": "cpu_time (μs)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "executions"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "elapsed_time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "displayName",
+                "value": "elapsed_time (μs)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "disk_reads"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "elapsed_time (μs)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 167
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "elapsed_time_ratio"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 180
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 23,
+        "w": 24,
+        "x": 0,
+        "y": 114
+      },
+      "id": 99,
+      "maxDataPoints": 500,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": [
+            "Value"
+          ],
+          "reducer": [
+            "lastNotNull"
+          ],
+          "show": false
+        },
+        "frameIndex": 0,
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Time"
+          }
+        ]
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "oracledb_custom_sql_accumulate_logical_reads_avg_top_20_plan_hash_value{instance=\"$host\"}",
+          "format": "table",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "logical_reads_avg_top_20",
+          "range": true,
+          "refId": "logical_reads_avg_top_20"
+        }
+      ],
+      "title": "SQL쿼리별 (Logical IO 수행 수 / SQL 실행 수) TOP 20",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "cpu_time": false
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Time": 0,
+              "Value": 15,
+              "__name__": 16,
+              "bind_vals": 2,
+              "buffer_gets": 9,
+              "cpu_ratio": 5,
+              "cpu_time": 6,
+              "disk_reads": 10,
+              "elapsed_time": 7,
+              "elapsed_time_ratio": 8,
+              "executions": 4,
+              "full_txt": 3,
+              "instance": 11,
+              "job": 12,
+              "parsing_schema_name": 1,
+              "plan_hash_value": 13,
+              "sql_id": 14
+            },
+            "renameByName": {
+              "cpu_ratio": "",
+              "cpu_time": "",
+              "disk_reads": ""
+            }
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "number",
+                "targetField": "executions"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "cpu_ratio"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "cpu_time"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "elapsed_time"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "elapsed_time_ratio"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "buffer_gets"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "disk_reads"
+              }
+            ],
+            "fields": {}
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 40,
+  "tags": [
+    "prometheus",
+    "oracle"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "",
+        "includeAll": false,
+        "name": "host",
+        "options": [],
+        "query": "label_values(oracledb_up, instance)",
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "auto": true,
+        "auto_count": 200,
+        "auto_min": "1s",
+        "current": {
+          "text": "5s",
+          "value": "5s"
+        },
+        "label": "Interval",
+        "name": "interval",
+        "options": [
+          {
+            "selected": false,
+            "text": "1s",
+            "value": "1s"
+          },
+          {
+            "selected": true,
+            "text": "5s",
+            "value": "5s"
+          },
+          {
+            "selected": false,
+            "text": "1m",
+            "value": "1m"
+          },
+          {
+            "selected": false,
+            "text": "5m",
+            "value": "5m"
+          },
+          {
+            "selected": false,
+            "text": "1h",
+            "value": "1h"
+          },
+          {
+            "selected": false,
+            "text": "6h",
+            "value": "6h"
+          },
+          {
+            "selected": false,
+            "text": "1d",
+            "value": "1d"
+          }
+        ],
+        "query": "1s,5s,1m,5m,1h,6h,1d",
+        "refresh": 2,
+        "type": "interval"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "OracleDB Monitoring - performance and table space stats",
+  "uid": "6f1a26360",
+  "version": 54,
+  "weekStart": ""
+}
