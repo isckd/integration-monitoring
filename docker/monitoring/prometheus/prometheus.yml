@@ -1,0 +1,46 @@
+global:
+  scrape_interval: 5s # 메트릭 수집 주기
+
+scrape_configs:
+  - job_name: 'test-dev'
+    metrics_path: '/test/monitoring/prometheus'
+    static_configs:
+      - targets: ['test-host:10295']
+
+  - job_name: 'prometheus'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['localhost:9090'] # Prometheus 자체 메트릭
+
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['${RABBITMQ_HOST}:15692']  # ${RABBITMQ_HOST} : rabbitmq 의 prometheus 전용 port  (변수를 읽지 못하니 참고)
+
+  - job_name: 'oracle'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['oracledb-exporter:9161']  # Oracle Exporter가 실행 중인 호스트와 포트    
+
+  - job_name: 'redis'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  - job_name: 'kafka'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['kafka-exporter:9308']      
+
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysqld-exporter:9104']
+
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch-exporter:9114']  
+
+remote_write:
+  - url: "http://influxdb:8086/api/v1/prom/write?db=prometheus_metrics"
+    basic_auth:
+      username: admin
+      password: admin

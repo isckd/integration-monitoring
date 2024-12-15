@@ -1,0 +1,69 @@
+services:
+  oracledb-exporter:
+    image: ghcr.io/iamseth/oracledb_exporter:0.6.0
+    container_name: oracledb-exporter
+    ports:
+      - "9161:9161"  # Oracle Exporter 메트릭 엔드포인트
+    environment:
+      # 특수문자는 인식하지 못하므로 인코딩해 넣어야 한다.
+      - DATA_SOURCE_NAME=oralce://${Root권한계정명}:${Root권한계정PW}@${ORACLE_DB_HOST}:${ORACLE_DB_PORT}/${ORACLE_DB_SERVICE_NAME}
+    volumes:
+      - ./oracle/metrics.yaml:/etc/oracledb_exporter/metrics.yaml
+    command: ["--custom.metrics", "/etc/oracledb_exporter/metrics.yaml"]
+    networks:
+      - monitoring_network	# 모니터링 전용 network 이름을 지정    
+    restart: unless-stopped      
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.66.0
+    container_name: redis-exporter
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=${REDIS_HOST}:${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PW}
+    networks:
+      - monitoring_network	# 모니터링 전용 network 이름을 지정      
+
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:v1.8.0
+    container_name: kafka-exporter
+    ports:
+      - "9308:9308"
+    command: ["--kafka.server=${KAFKA_HOST}:${KAFKA_POERT}"]
+    networks:
+      - monitoring_network	# 모니터링 전용 network 이름을 지정    
+    extra_hosts:
+      - "${KAFKA_HOST_매핑된_NAME}:${KAFKA_HOST}"      # 컨테이너 내부에서 인식 못하는 ${KAFKA_HOST_매핑된_NAME} 를 ${KAFKA_HOST} 으로 host mapping      
+
+  mysqld-exporter:
+    container_name: mysqld-exporter
+    image: prom/mysqld-exporter:v0.16.0
+    ports:
+      - 9104:9104
+    command:
+      - "--mysqld.username=${MYSQL_ROOT_계정명}:${MYSQL_ROOT_계정_PW}"
+      - "--mysqld.address=${MYSQL_HOST}:${MYSQL_PORT}"      
+    networks:
+      - monitoring_network	# 모니터링 전용 network 이름을 지정      
+
+  elasticsearch-exporter:
+    image: quay.io/prometheuscommunity/elasticsearch-exporter:v1.8.0
+    container_name: elasticsearch-exporter
+    ports:
+      - "9114:9114"
+    command:
+      # 특수문자는 인식하지 못하므로 인코딩해 넣어야 한다.
+      - '--es.uri=https://${ELASTICSEARCH_ROOT_계정명}:${ELASTICSEARCH_ROOT_PW}@${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}'
+      - '--es.ca=/certs/ca.crt'  
+      - '--log.level=info'       
+    volumes:
+      - ./elasticsearch/certs:/certs:ro              # Elasticsearch CA 인증서를 컨테이너에 마운트
+    networks:
+      - monitoring_network	# 모니터링 전용 network 이름을 지정      
+    extra_hosts:
+      - "${ELASTICSEARCH_HOST_매핑된_NAME}:${ELASTICSEARCH_HOST}"      # 컨테이너 내부에서 인식 못하는 ${ELASTICSEARCH_HOST_매핑된_NAME} 를 ${ELASTICSEARCH_HOST} 으로 host mapping      
+
+networks:				# 모니터링 전용 network 이름을 지정
+  monitoring_network:
+    external: true

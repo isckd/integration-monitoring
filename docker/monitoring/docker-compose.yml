@@ -1,0 +1,57 @@
+services:
+  prometheus:
+    image: prom/prometheus:v3.0.1
+    container_name: prometheus
+    ports:
+      - "9093:9090" # Prometheus 웹 UI
+    volumes:
+      - /home/monitoring/docker/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - monitoring_network	# 모니터링 전용 network 이름을 지정
+    restart: always
+
+  grafana:
+    image: grafana/grafana:11.3.1
+    container_name: grafana
+    ports:
+      - "3005:3000" # Grafana 웹 UI
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin # Grafana 기본 사용자
+      - GF_SECURITY_ADMIN_PASSWORD=admin # Grafana 기본 비밀번호
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - /home/monitoring/docker/monitoring/grafana/plugins:/var/lib/grafana/plugins       # 설치한 plugin 이 있다면 작성
+      - /home/monitoring/docker/monitoring/grafana/provisioning:/etc/grafana/provisioning # 프로비저닝 디렉토리
+    depends_on:
+      - prometheus
+      - influxdb
+    networks:
+      - monitoring_network	# 모니터링 전용 network 이름을 지정
+    extra_hosts:
+      - "elasticsearch.konadc.com:10.40.34.150"
+    restart: always
+
+  influxdb:
+    image: influxdb:1.11.8	# influxdb 2.x 버전은 k6 와 호환성이 떨어져 1.x 버전 중 최신으로 진행
+    container_name: influxdb
+    ports:
+      - "8086:8086" # InfluxDB API
+    environment:
+      - INFLUXDB_DB=metrics,prometheus_metrics # 기본 데이터베이스 이름
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=admin
+      - INFLUXDB_HTTP_AUTH_ENABLED=false	# Grafana DashBoard 에서 바로 접근 가능하도록 HTTP Auth 인증을 false 로 지정
+    volumes:
+      - influxdb-data:/var/lib/influxdb
+    networks:
+      - monitoring_network	# 모니터링 전용 network 이름을 지정
+    restart: always
+
+volumes:
+  grafana-data:
+  influxdb-data:
+
+networks:				# 모니터링 전용 network 이름을 지정
+  monitoring_network:
+    driver: bridge
+    name: monitoring_network

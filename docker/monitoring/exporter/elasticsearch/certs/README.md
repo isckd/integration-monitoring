@@ -1,0 +1,1 @@
+# elasticsearch 접속을 위한 ca.crt 파일을 첨부해야 한다.

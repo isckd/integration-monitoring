@@ -1,0 +1,122 @@
+metrics:
+  # metricdesc : prometheus 에 float 형태로 저장될 labels 들에 대한 description. float 형태가 아닌 값을 넣으면 오류 발생.
+  # labels : prometheus 에 저장될 값들.
+
+  # 동일한 SQL 문이 실행될 경우, 같은 SQL_ID 와 실행계획을 가진다.
+  # 일반적으로 바인딩 변수가 달라도 같은 SQL 이면 같은 실행계획으로 캐싱되지만, 간혹 데이터 분포 등에 따라 스캔 방식이 변경되어 실행계획이 분리된다.
+
+  # SQL쿼리별 CPU 사용시간 총량 기준 TOP 20
+  - context: "custom_sql_accumulate_cpu_use_avg_top_20"
+    metricsdesc:
+      plan_hash_value: "Plan Hash값."
+      # executions: "SQL 실행 수"
+      # buffer_gets: "Logical I/O 수행 수 (많으면 인덱스 최적화)"
+      # disk_reads: "Physical I/O 수행 수 (많으면 캐싱 / 데이터 접근 패턴 점검)"
+      # cpu_time: "SQL 문이 실행 중 CPU 를 사용한 총 시간 (micro second)"
+      # elapsed_time: "SQL 문이 실행을 완료하는 데 소요된 총 시간 (micro second)"
+      # cpu_ratio: "SQL 문이 총 CPU 자원에서 차지한 비율"
+      # elapsed_time_ratio: "SQL 문이 전체 실행 시간(Elapsed Time)에서 차지한 비율"
+    labels:
+      - "sql_id"
+      - "plan_hash_value"
+      - "parsing_schema_name"
+      - "executions"
+      - "buffer_gets"
+      - "disk_reads"
+      - "cpu_time"
+      - "elapsed_time"
+      - "cpu_ratio"
+      - "elapsed_time_ratio"
+      - "full_txt"
+      - "bind_vals"
+    request: "SELECT main.*, (SELECT rtrim(xmlagg(xmlelement(e, sql_text ,' ').extract('//text()') order by piece).GetClobVal(),' ') FROM v$sqltext b WHERE b.sql_id = main.sql_id GROUP BY sql_id ) as full_txt, (SELECT rtrim(xmlagg(xmlelement(e,name || ' = ' || nvl(value_string,'NULL'),' / ').extract('//text()') order by sql_id).GetClobVal(),' / ') FROM V$SQL_BIND_CAPTURE c WHERE c.was_captured = 'YES' AND c.sql_id = main.sql_id AND (sql_id , last_captured) IN (SELECT sql_id , max(last_captured) as last_captured FROM V$SQL_BIND_CAPTURE d WHERE was_captured = 'YES' AND d.sql_id = main.sql_id GROUP BY sql_id ) GROUP BY sql_id ) as bind_vals FROM ( SELECT sql_id, plan_hash_value, parsing_schema_name, executions, buffer_gets, disk_reads, cpu_time, elapsed_time, round(cpu_time/sum(cpu_time) OVER()*100,1) cpu_ratio, round(elapsed_time/sum(elapsed_time) OVER () *100 ,1) elapsed_time_ratio FROM v$sqlarea a WHERE executions > 1 AND parsing_schema_name not in ('SYSAUX','SYSMAN','XDB','HR','ODM','OUTLN','OE','SH','PM','IX','WK_TEST','PERFSTAT','DBSNMP','OLAPSYS','QS_CS','QS_CB','QS_CBADM','QS_OS','QS_WS','QS','QS_ADM','ODM_MTR','WKPROXY','QS_ES','ANONYMOUS','WKSYS','WMSYS','APEX_030200','APEX_PUBLIC_USER','APPQOSSYS','BI','CTXSYS','DIP','EXFSYS','FLOWS_FILES','MDDATA','MDSYS','MGMT_VIEW','ORACLE_OCM','ORDDATA','ORDPLUGINS','ORDSYS','OWBSYS','OWBSYS_AUDIT','SCOTT','SI_INFORMTN_SCHEMA','SPATIAL_CSW_ADMIN_USR','SPATIAL_WFS_ADMIN_USR','XS$NULL') AND NOT (module LIKE 'Golden%' OR module LIKE 'TOAD%' OR module LIKE 'toad%' OR module LIKE 'Orange%' OR module LIKE 'exp%' OR module LIKE 'SQL*Plus%' OR module LIKE 'SQL Developer%' OR module LIKE 'oracle@%' OR module LIKE 'sqlplus@%') AND NOT (TRIM(SQL_TEXT) LIKE '%:Q%' OR TRIM(SQL_TEXT) LIKE 'declare%' OR TRIM(SQL_TEXT) LIKE 'DECLARE%' OR TRIM(SQL_TEXT) LIKE 'truncate%' OR TRIM(SQL_TEXT) LIKE 'TRUNCATE%' OR TRIM(SQL_TEXT) LIKE '%dba\_%' escape '\\' OR TRIM(SQL_TEXT) LIKE '%DBA\_%' escape '\\' OR TRIM(SQL_TEXT) LIKE 'SQLGateMain%' OR TRIM(SQL_TEXT) LIKE 'ALTER SESSION%' OR TRIM(SQL_TEXT) LIKE '%v$%' OR TRIM(SQL_TEXT) LIKE '%x$%') ORDER BY cpu_time/sum(cpu_time) OVER()*100 desc ) main WHERE rownum <= 20"
+
+  # SQL쿼리별 (총 수행시간 / 총 수행 수) TOP 20
+  - context: "custom_sql_accumulate_elapsed_avg_top_20"
+    metricsdesc:
+      plan_hash_value: "Plan Hash값."
+      # executions: "SQL 실행 수"
+      # buffer_gets: "Logical I/O 수행 수 (많으면 인덱스 최적화)"
+      # disk_reads: "Physical I/O 수행 수 (많으면 캐싱 / 데이터 접근 패턴 점검)"
+      # cpu_time: "SQL 문이 실행 중 CPU 를 사용한 총 시간 (micro second)"
+      # elapsed_time: "SQL 문이 실행을 완료하는 데 소요된 총 시간 (micro second)"
+      # cpu_ratio: "SQL 문이 총 CPU 자원에서 차지한 비율"
+      # elapsed_time_ratio: "SQL 문이 전체 실행 시간(Elapsed Time)에서 차지한 비율"
+    labels:
+      - "sql_id"
+      - "plan_hash_value"
+      - "parsing_schema_name"
+      - "executions"
+      - "buffer_gets"
+      - "disk_reads"
+      - "cpu_time"
+      - "elapsed_time"
+      - "cpu_ratio"
+      - "elapsed_time_ratio"
+      - "full_txt"
+      - "bind_vals"
+    request: "SELECT main.*, (SELECT rtrim(xmlagg(xmlelement(e, sql_text ,' ').extract('//text()') order by piece).GetClobVal(),' ') FROM  v$sqltext b WHERE b.sql_id = main.sql_id GROUP BY sql_id ) as full_txt, (SELECT rtrim(xmlagg(xmlelement(e,name || ' = ' || nvl(value_string,'NULL'),' / ').extract('//text()') order by sql_id).GetClobVal(),' / ') FROM   V$SQL_BIND_CAPTURE c WHERE  c.was_captured = 'YES' AND    c.sql_id = main.sql_id AND    (sql_id , last_captured) IN (SELECT sql_id , max(last_captured) as last_captured FROM V$SQL_BIND_CAPTURE d WHERE  was_captured = 'YES' AND d.sql_id = main.sql_id GROUP BY sql_id ) GROUP BY sql_id ) as bind_vals FROM ( SELECT sql_id, plan_hash_value, parsing_schema_name, executions, buffer_gets, disk_reads, cpu_time, elapsed_time, round(cpu_time/sum(cpu_time) OVER()*100,1) cpu_ratio, round(elapsed_time/sum(elapsed_time) OVER () *100 ,1) elapsed_time_ratio FROM   v$sqlarea a WHERE  executions > 1 AND    parsing_schema_name not in ('SYSAUX','SYSMAN','XDB','HR','ODM','OUTLN','OE','SH','PM','IX','WK_TEST','PERFSTAT','DBSNMP','OLAPSYS','QS_CS','QS_CB','QS_CBADM','QS_OS','QS_WS','QS','QS_ADM','ODM_MTR','WKPROXY','QS_ES','ANONYMOUS','WKSYS','WMSYS','APEX_030200','APEX_PUBLIC_USER','APPQOSSYS','BI','CTXSYS','DIP','EXFSYS','FLOWS_FILES','MDDATA','MDSYS','MGMT_VIEW','ORACLE_OCM','ORDDATA','ORDPLUGINS','ORDSYS','OWBSYS','OWBSYS_AUDIT','SCOTT','SI_INFORMTN_SCHEMA','SPATIAL_CSW_ADMIN_USR','SPATIAL_WFS_ADMIN_USR','XS$NULL') AND    NOT (module LIKE 'Golden%' OR module LIKE 'TOAD%' OR module LIKE 'toad%' OR module LIKE 'Orange%' OR module LIKE 'exp%' OR module LIKE 'SQL*Plus%' OR module LIKE 'SQL Developer%' OR module LIKE 'oracle@%' OR module LIKE 'sqlplus@%') AND    NOT (TRIM(SQL_TEXT) LIKE '%:Q%' OR TRIM(SQL_TEXT) LIKE 'declare%' OR TRIM(SQL_TEXT) LIKE 'DECLARE%' OR TRIM(SQL_TEXT) LIKE 'truncate%' OR TRIM(SQL_TEXT) LIKE 'TRUNCATE%' OR TRIM(SQL_TEXT) LIKE '%dba\_%' escape '\\' OR TRIM(SQL_TEXT) LIKE '%DBA\_%' escape '\\' OR TRIM(SQL_TEXT) LIKE 'SQLGateMain%' OR TRIM(SQL_TEXT) LIKE 'ALTER SESSION%' OR TRIM(SQL_TEXT) LIKE '%v$%' OR TRIM(SQL_TEXT) LIKE '%x$%') ORDER BY elapsed_time / executions desc ) main WHERE rownum <= 20"
+
+  # SQL쿼리별 (Logical I/O 수행 수 / SQL 실행 수) TOP 20
+  - context: "custom_sql_accumulate_logical_reads_avg_top_20"
+    metricsdesc:
+      plan_hash_value: "Plan Hash값"
+      # executions: "SQL 실행 수"
+      # buffer_gets: "Logical I/O 수행 수 (많으면 인덱스 최적화)"
+      # disk_reads: "Physical I/O 수행 수 (많으면 캐싱 / 데이터 접근 패턴 점검)"
+      # cpu_time: "SQL 문이 실행 중 CPU 를 사용한 총 시간 (micro second)"
+      # elapsed_time: "SQL 문이 실행을 완료하는 데 소요된 총 시간 (micro second)"
+      # cpu_ratio: "SQL 문이 총 CPU 자원에서 차지한 비율"
+      # elapsed_time_ratio: "SQL 문이 전체 실행 시간(Elapsed Time)에서 차지한 비율"
+    labels:
+      - "sql_id"
+      - "plan_hash_value"
+      - "parsing_schema_name"
+      - "executions"
+      - "buffer_gets"
+      - "disk_reads"
+      - "cpu_time"
+      - "elapsed_time"
+      - "cpu_ratio"
+      - "elapsed_time_ratio"
+      - "full_txt"
+      - "bind_vals"
+    request: "SELECT main.*, (SELECT rtrim(xmlagg(xmlelement(e, sql_text ,' ').extract('//text()') order by piece).GetClobVal(),' ') FROM  v$sqltext b WHERE b.sql_id = main.sql_id GROUP BY sql_id ) as full_txt, (SELECT rtrim(xmlagg(xmlelement(e,name || ' = ' || nvl(value_string,'NULL'),' / ').extract('//text()') order by sql_id).GetClobVal(),' / ') FROM   V$SQL_BIND_CAPTURE c WHERE  c.was_captured = 'YES' AND    c.sql_id = main.sql_id AND    (sql_id , last_captured) IN (SELECT sql_id , max(last_captured) as last_captured FROM V$SQL_BIND_CAPTURE d WHERE  was_captured = 'YES' AND d.sql_id = main.sql_id GROUP BY sql_id ) GROUP BY sql_id ) as bind_vals FROM ( SELECT sql_id, plan_hash_value, parsing_schema_name, executions, buffer_gets, disk_reads, direct_writes, cpu_time, elapsed_time, round(cpu_time/sum(cpu_time) OVER()*100,1) cpu_ratio, round(elapsed_time/sum(elapsed_time) OVER () *100 ,1) elapsed_time_ratio FROM   v$sqlarea a WHERE  executions > 1 AND    parsing_schema_name not in ('SYSAUX','SYSMAN','XDB','HR','ODM','OUTLN','OE','SH','PM','IX','WK_TEST','PERFSTAT','DBSNMP','OLAPSYS','QS_CS','QS_CB','QS_CBADM','QS_OS','QS_WS','QS','QS_ADM','ODM_MTR','WKPROXY','QS_ES','ANONYMOUS','WKSYS','WMSYS','APEX_030200','APEX_PUBLIC_USER','APPQOSSYS','BI','CTXSYS','DIP','EXFSYS','FLOWS_FILES','MDDATA','MDSYS','MGMT_VIEW','ORACLE_OCM','ORDDATA','ORDPLUGINS','ORDSYS','OWBSYS','OWBSYS_AUDIT','SCOTT','SI_INFORMTN_SCHEMA','SPATIAL_CSW_ADMIN_USR','SPATIAL_WFS_ADMIN_USR','XS$NULL') AND    NOT (module LIKE 'Golden%' OR module LIKE 'TOAD%' OR module LIKE 'toad%' OR module LIKE 'Orange%' OR module LIKE 'exp%' OR module LIKE 'SQL*Plus%' OR module LIKE 'SQL Developer%' OR module LIKE 'oracle@%' OR module LIKE 'sqlplus@%') AND    NOT (TRIM(SQL_TEXT) LIKE '%:Q%' OR TRIM(SQL_TEXT) LIKE 'declare%' OR TRIM(SQL_TEXT) LIKE 'DECLARE%' OR TRIM(SQL_TEXT) LIKE 'truncate%' OR TRIM(SQL_TEXT) LIKE 'TRUNCATE%' OR TRIM(SQL_TEXT) LIKE '%dba\_%' escape '\\' OR TRIM(SQL_TEXT) LIKE '%DBA\_%' escape '\\' OR TRIM(SQL_TEXT) LIKE 'SQLGateMain%' OR TRIM(SQL_TEXT) LIKE 'ALTER SESSION%' OR TRIM(SQL_TEXT) LIKE '%v$%' OR TRIM(SQL_TEXT) LIKE '%x$%') ORDER BY buffer_gets / executions desc ) main WHERE rownum <= 20"      
+
+  - context: "custom_sql_realtime_info"    
+    metricsdesc:
+      plan_hash_value: "Plan Hash값"
+    labels:
+      - "sid"
+      - "serial"
+      - "status"
+      - "schema"
+      - "machine"
+      - "program"
+      - "osuser"
+      - "start_time"
+      - "elapsed_seconds"
+      - "sql_id"
+      - "cpu_time"
+      - "buffer_gets"
+      - "disk_reads"
+      - "sql_text"     
+    request: "SELECT s.sid,s.serial# AS serial,s.status,s.schemaname AS schema,s.machine,s.program,s.osuser,TO_CHAR(s.sql_exec_start, 'YYYY-MM-DD HH24:MI:SS') AS start_time,ROUND((SYSDATE - s.sql_exec_start)*24*60*60, 0) AS elapsed_seconds,s.sql_id,q.hash_value AS plan_hash_value,q.cpu_time,q.buffer_gets,q.disk_reads,q.sql_text FROM v$session s JOIN v$sqlarea q ON s.sql_id = q.sql_id WHERE s.status = 'ACTIVE' AND s.sql_exec_start IS NOT NULL AND s.schemaname != 'SYS' ORDER BY q.cpu_time DESC"
+
+  - context: "custom_os_resource_info"
+    metricsdesc:
+      cpu_usage_percent: "Host OS CPU 사용률"
+      memory_usage_percent: "Host OS Memory 사용률"
+      total_memory_gb: "Host OS 총 Memory (gb)"
+      available_memory_gb: "Host OS 사용 가능한 Memory (gb)"
+      used_memory_gb: "Host OS 사용 중인 Memory (gb)"
+    request: "SELECT cpu_usage.value AS cpu_usage_percent, ROUND(((total_mem.value - (free_mem.value + inactive_mem.value)) / total_mem.value) * 100, 2) AS memory_usage_percent, ROUND(total_mem.value / (1024 * 1024 * 1024), 2) AS total_memory_gb, ROUND((free_mem.value + inactive_mem.value) / (1024 * 1024 * 1024), 2) AS available_memory_gb, ROUND((total_mem.value - (free_mem.value + inactive_mem.value)) / (1024 * 1024 * 1024), 2) AS used_memory_gb FROM (SELECT value FROM v$sysmetric WHERE metric_name = 'Host CPU Utilization (%)' ORDER BY end_time DESC FETCH FIRST 1 ROWS ONLY) cpu_usage, (SELECT value FROM v$osstat WHERE stat_name = 'PHYSICAL_MEMORY_BYTES') total_mem, (SELECT value FROM v$osstat WHERE stat_name = 'FREE_MEMORY_BYTES') free_mem, (SELECT value FROM v$osstat WHERE stat_name = 'INACTIVE_MEMORY_BYTES') inactive_mem"
+
+  # for test
+  - context: "custom_table_row_count"
+    metricsdesc:
+      row_count: "Number of rows in the CUSTOM_TABLE."
+    labels:
+      - "table_name"
+    request: |
+      SELECT 2 AS row_count, 'DUAL' AS table_name FROM DUAL      
